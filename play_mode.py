@@ -26,6 +26,5 @@ def draw():
     update_canvas()
 
 
-
 def finish():
     game_world.clear()
