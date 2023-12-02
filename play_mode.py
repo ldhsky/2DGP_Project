@@ -2,8 +2,18 @@ from pico2d import *
 import game_framework
 
 import game_world
+import server
+from Kirby import Kirby
+
 
 def init():
+    hide_cursor()
+
+    server.background = None
+    #game_world.add_object(server.background, 0)
+
+    kirby = Kirby(800, 600)
+    game_world.add_object(kirby, 1)
     pass
 
 
