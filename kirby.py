@@ -66,7 +66,7 @@ def time_out(e):
 
 # Boy Run Speed
 PIXEL_PER_METER = (10.0 / 0.1)  # 10 pixel 30 cm
-RUN_SPEED_KMPH = 20.0  # Km / Hour
+RUN_SPEED_KMPH = 15.0  # Km / Hour
 RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
 RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
 RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
@@ -95,21 +95,21 @@ class Idle:
     def do(kirby):
         pass
 
+    @staticmethod
+    def draw(kirby):
+        kirby.image.clip_draw(int(kirby.frame) * 100, kirby.action * 100, 100, 100, kirby.x, kirby.y)
+
 
 class Run:
-
     @staticmethod
     def enter(kirby, e):
         if right_down(e) or left_up(e):  # 오른쪽으로 RUN
-            kirby.dir, kirby.action, kirby.face_dir = 1, 3, 1
+            kirby.dir, kirby.action = 1, 3
         elif left_down(e) or right_up(e):  # 왼쪽으로 RUN
-            kirby.dir, kirby.action, kirby.face_dir = -1, 2, -1
+            kirby.dir, kirby.action = -1, 2
 
     @staticmethod
     def exit(kirby, e):
-        if space_down(e):
-            kirby.fire_ball()
-
         pass
 
     @staticmethod
@@ -124,13 +124,42 @@ class Run:
         kirby.image.clip_draw(int(kirby.frame) * 100, kirby.action * 100, 100, 100, kirby.x, kirby.y)
 
 
+class Jump:
+    @staticmethod
+    def enter(kirby, e):
+        # if right_down(e) or left_up(e):
+        #     kirby.dir, kirby.action, kirby.face_dir = 1, 3, 1
+        # elif left_down(e) or right_up(e):
+        #     kirby.dir, kirby.action, kirby.face_dir = -1, 2, -1
+        kirby.image = load_image('texture/kirby_jump.png')
+        kirby.y_move = 800
+
+    @staticmethod
+    def exit(kirby, e):
+        pass
+
+    @staticmethod
+    def do(kirby):
+        kirby.y_move -= 1000 * game_framework.frame_time
+        # boy.frame = (boy.frame + 1) % 8
+        # kirby.x += kirby.dir * RUN_SPEED_PPS * game_framework.frame_time
+        # kirby.x = clamp(25, kirby.x, 1600 - 25)
+        # kirby.frame = (kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 8
+        kirby.y += kirby.y_move * game_framework.frame_time
+
+    @staticmethod
+    def draw(kirby):
+        kirby.image.clip_draw(int(kirby.frame) * 100, 0, 100, 100, kirby.x, kirby.y)
+
+
 class StateMachine:
     def __init__(self, kirby):
         self.kirby = kirby
         self.cur_state = Idle
         self.transitions = {
-            Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run, },
-            Run: {right_down: Idle, left_down: Idle, left_up: Idle, right_up: Idle, }
+            Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run, space_down: Jump},
+            Run: {right_down: Idle, left_down: Idle, left_up: Idle, right_up: Idle, space_down: Jump},
+            Jump: {}
         }
 
     def start(self):
@@ -139,7 +168,7 @@ class StateMachine:
     def update(self):
         self.cur_state.do(self.kirby)
 
-        if self.cur_state == Run:
+        if self.cur_state == Run or self.cur_state == Jump:
             self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 8
         else:
             self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 10
@@ -155,6 +184,8 @@ class StateMachine:
                 return True
         return False
 
+    def draw(self):
+        self.cur_state.draw(self.kirby)
 
 class Kirby:
     def __init__(self, _x, _y):
@@ -176,8 +207,8 @@ class Kirby:
         self.state_machine.handle_event(('INPUT', event))
 
     def draw(self):
-        self.image.clip_draw(int(self.frame) * 100, self.action * 100, 100, 100, self.x, self.y)
-
+        #self.image.clip_draw(int(self.frame) * 100, self.action * 100, 100, 100, self.x, self.y)
+        self.state_machine.draw()
     def get_bb(self):
         return self.x - 10, self.y - 10, self.x + 10, self.y + 10
 
