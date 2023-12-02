@@ -28,7 +28,8 @@ def handle_events():
 
 
 def update():
-    pass
+    game_world.update()
+    game_world.handle_collisions()
 
 
 def draw():
