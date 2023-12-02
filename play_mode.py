@@ -2,6 +2,7 @@ from pico2d import *
 import game_framework
 
 import game_world
+import kirby
 import server
 from background import Background
 from kirby import Kirby
@@ -13,8 +14,8 @@ def init():
     server.background = Background()
     game_world.add_object(server.background, 0)
 
-    kirby = Kirby(800, 600)
-    game_world.add_object(kirby, 1)
+    server.kirby = Kirby(400, 400)
+    game_world.add_object(server.kirby, 1)
     pass
 
 
@@ -25,6 +26,9 @@ def handle_events():
             game_framework.quit()
         elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
             game_framework.quit()
+        else:
+            server.kirby.handle_event(event)
+
 
 
 def update():
