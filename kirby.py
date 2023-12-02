@@ -4,6 +4,8 @@ from utils import make_color_transparent
 import server
 
 
+
+
 class Kirby:
     def __init__(self, x, y):
         self.x = x

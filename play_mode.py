@@ -3,14 +3,15 @@ import game_framework
 
 import game_world
 import server
-from Kirby import Kirby
+from background import Background
+from kirby import Kirby
 
 
 def init():
     hide_cursor()
 
-    server.background = None
-    #game_world.add_object(server.background, 0)
+    server.background = Background()
+    game_world.add_object(server.background, 0)
 
     kirby = Kirby(800, 600)
     game_world.add_object(kirby, 1)
