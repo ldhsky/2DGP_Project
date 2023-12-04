@@ -12,7 +12,7 @@ class Background:
 
 
     def draw(self):
-        self.image.clip_draw_to_origin(0, 0, self.cw, self.ch, 0, 0)
+        self.image.clip_draw_to_origin(900, 500, self.cw, self.ch, 0, 0)
 
     def update(self):
         #self.window_left = clamp(0, int(server.boy.x) - self.cw // 2, self.w - self.cw - 1)

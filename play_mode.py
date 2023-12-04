@@ -5,6 +5,7 @@ import game_world
 import kirby
 import server
 from background import Background
+from ground import Ground
 from kirby import Kirby
 
 
@@ -15,8 +16,12 @@ def init():
     game_world.add_object(server.background, 0)
 
     server.kirby = Kirby(400, 400)
-    game_world.add_object(server.kirby, 1)
-    pass
+    game_world.add_object(server.kirby, 2)
+    game_world.add_collision_pair('kirby:ground', server.kirby, None)
+
+    ground = Ground(400, 300)
+    game_world.add_object(ground, 1)
+    game_world.add_collision_pair('kirby:ground', None, ground)
 
 
 def handle_events():

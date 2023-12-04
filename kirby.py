@@ -64,6 +64,9 @@ def time_out(e):
     return e[0] == 'TIME_OUT'
 
 
+
+
+
 # Boy Run Speed
 PIXEL_PER_METER = (10.0 / 0.1)  # 10 pixel 30 cm
 RUN_SPEED_KMPH = 15.0  # Km / Hour
@@ -80,12 +83,15 @@ FRAMES_PER_ACTION = 8
 class Idle:
     @staticmethod
     def enter(kirby, e):
+        kirby.image = load_image("texture/kirby.png")
         if kirby.action == 3:
             kirby.action = 5
         elif kirby.action == 2:
             kirby.action = 4
         kirby.speed = 0
         kirby.dir = 0
+        kirby.y_move = 0
+        kirby.fly = False
 
     @staticmethod
     def exit(kirby, e):
@@ -93,7 +99,7 @@ class Idle:
 
     @staticmethod
     def do(kirby):
-        pass
+        kirby.y -= kirby.y_move
 
     @staticmethod
     def draw(kirby):
@@ -116,6 +122,7 @@ class Run:
     def do(kirby):
         # boy.frame = (boy.frame + 1) % 8
         kirby.x += kirby.dir * RUN_SPEED_PPS * game_framework.frame_time
+        kirby.y -= kirby.y_move
         # kirby.x = clamp(25, kirby.x, 1600 - 25)
         # kirby.frame = (kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 8
 
@@ -131,8 +138,11 @@ class Jump:
         #     kirby.dir, kirby.action, kirby.face_dir = 1, 3, 1
         # elif left_down(e) or right_up(e):
         #     kirby.dir, kirby.action, kirby.face_dir = -1, 2, -1
-        kirby.image = load_image('texture/kirby_jump.png')
-        kirby.y_move = 800
+        if space_down(e):
+            kirby.image = load_image('texture/kirby_jump.png')
+            kirby.y_move = 800
+        kirby.fly = True
+        kirby.flying = True
 
     @staticmethod
     def exit(kirby, e):
@@ -149,6 +159,65 @@ class Jump:
 
     @staticmethod
     def draw(kirby):
+        if kirby.dir == 1:
+            kirby.image.clip_draw(int(kirby.frame) * 100, 0, 100, 100, kirby.x, kirby.y)
+        else:
+            kirby.image.clip_composite_draw(int(kirby.frame) * 100, 0, 100, 100, 0, 'h', kirby.x, kirby.y, 100, 100)
+
+
+class JumpLeft:
+    @staticmethod
+    def enter(kirby, e):
+        # if right_down(e) or left_up(e):
+        #     kirby.dir, kirby.action, kirby.face_dir = 1, 3, 1
+        # elif left_down(e) or right_up(e):
+        #     kirby.dir, kirby.action, kirby.face_dir = -1, 2, -1
+        pass
+
+    @staticmethod
+    def exit(kirby, e):
+        pass
+
+    @staticmethod
+    def do(kirby):
+        kirby.y_move -= 1000 * game_framework.frame_time
+        # boy.frame = (boy.frame + 1) % 8
+        # kirby.x += kirby.dir * RUN_SPEED_PPS * game_framework.frame_time
+        # kirby.x = clamp(25, kirby.x, 1600 - 25)
+        # kirby.frame = (kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 8
+        kirby.y += kirby.y_move * game_framework.frame_time
+        kirby.x -= RUN_SPEED_PPS * game_framework.frame_time
+
+    @staticmethod
+    def draw(kirby):
+        kirby.image.clip_composite_draw(int(kirby.frame) * 100, 0, 100, 100, 0, 'h', kirby.x, kirby.y, 100, 100)
+
+
+class JumpRight:
+    @staticmethod
+    def enter(kirby, e):
+        # if right_down(e) or left_up(e):
+        #     kirby.dir, kirby.action, kirby.face_dir = 1, 3, 1
+        # elif left_down(e) or right_up(e):
+        #     kirby.dir, kirby.action, kirby.face_dir = -1, 2, -1
+        pass
+
+    @staticmethod
+    def exit(kirby, e):
+        pass
+
+    @staticmethod
+    def do(kirby):
+        kirby.y_move -= 1000 * game_framework.frame_time
+        # boy.frame = (boy.frame + 1) % 8
+        # kirby.x += kirby.dir * RUN_SPEED_PPS * game_framework.frame_time
+        # kirby.x = clamp(25, kirby.x, 1600 - 25)
+        # kirby.frame = (kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 8
+        kirby.y += kirby.y_move * game_framework.frame_time
+        kirby.x += RUN_SPEED_PPS * game_framework.frame_time
+
+    @staticmethod
+    def draw(kirby):
         kirby.image.clip_draw(int(kirby.frame) * 100, 0, 100, 100, kirby.x, kirby.y)
 
 
@@ -159,7 +228,9 @@ class StateMachine:
         self.transitions = {
             Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run, space_down: Jump},
             Run: {right_down: Idle, left_down: Idle, left_up: Idle, right_up: Idle, space_down: Jump},
-            Jump: {}
+            Jump: {right_down: JumpRight, left_down: JumpLeft, left_up: JumpRight, right_up: JumpLeft},
+            JumpLeft: {right_down: Jump, left_up: Jump},
+            JumpRight: {left_down: Jump, right_up: Jump}
         }
 
     def start(self):
@@ -168,15 +239,21 @@ class StateMachine:
     def update(self):
         self.cur_state.do(self.kirby)
 
-        if self.cur_state == Run or self.cur_state == Jump:
-            self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 8
-        else:
+        if self.cur_state == Idle:
             self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 10
+
+        else:
+            self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 8
         self.kirby.x += math.cos(self.kirby.dir) * self.kirby.speed * game_framework.frame_time
         self.kirby.y += math.sin(self.kirby.dir) * self.kirby.speed * game_framework.frame_time
 
     def handle_event(self, e):
         for check_event, next_state in self.transitions[self.cur_state].items():
+            if self.kirby.fly and not self.kirby.flying:
+                self.cur_state.exit(self.kirby, e)
+                self.cur_state = Idle
+                self.cur_state.enter(self.kirby, e)
+                return True
             if check_event(e):
                 self.cur_state.exit(self.kirby, e)
                 self.cur_state = next_state
@@ -187,15 +264,19 @@ class StateMachine:
     def draw(self):
         self.cur_state.draw(self.kirby)
 
+
 class Kirby:
     def __init__(self, _x, _y):
         self.x = _x
         self.y = _y
+        self.fly = False
+        self.flying = False
         self.frame = 0
         self.action = 5
         self.image = load_image('texture/kirby.png')
         self.state_machine = StateMachine(self)
         self.state_machine.start()
+        self.y_move = 0
 
     def update(self):
         self.state_machine.update()
@@ -209,8 +290,11 @@ class Kirby:
     def draw(self):
         #self.image.clip_draw(int(self.frame) * 100, self.action * 100, 100, 100, self.x, self.y)
         self.state_machine.draw()
+        draw_rectangle(*self.get_bb())
+
     def get_bb(self):
-        return self.x - 10, self.y - 10, self.x + 10, self.y + 10
+        return self.x - 25, self.y - 50, self.x + 25, self.y
 
     def handle_collision(self, group, other):
-        pass
+        if group == 'kirby:ground':
+            self.flying = False
