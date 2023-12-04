@@ -2,3 +2,5 @@
 background = None
 kirby = None
 grounds = None
+
+gravity = 2000

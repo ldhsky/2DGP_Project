@@ -101,7 +101,7 @@ class Idle:
 
     @staticmethod
     def do(kirby):
-        kirby.y_move -= 1000 * game_framework.frame_time
+        kirby.y_move -= server.gravity * game_framework.frame_time
         if not kirby.flying:
             kirby.y_move = 0
         kirby.y += kirby.y_move * game_framework.frame_time
@@ -126,7 +126,7 @@ class RunLeft:
     def do(kirby):
         # boy.frame = (boy.frame + 1) % 8
         kirby.x -= RUN_SPEED_PPS * game_framework.frame_time
-        kirby.y_move -= 1000 * game_framework.frame_time
+        kirby.y_move -= server.gravity * game_framework.frame_time
         if not kirby.flying:
             kirby.y_move = 0
         kirby.y += kirby.y_move * game_framework.frame_time
@@ -152,7 +152,7 @@ class RunRigth:
     def do(kirby):
         # boy.frame = (boy.frame + 1) % 8
         kirby.x += RUN_SPEED_PPS * game_framework.frame_time
-        kirby.y_move -= 1000 * game_framework.frame_time
+        kirby.y_move -= server.gravity * game_framework.frame_time
         if not kirby.flying:
             kirby.y_move = 0
         kirby.y += kirby.y_move * game_framework.frame_time
@@ -184,7 +184,7 @@ class Jump:
 
     @staticmethod
     def do(kirby):
-        kirby.y_move -= 1000 * game_framework.frame_time
+        kirby.y_move -= server.gravity * game_framework.frame_time
         # boy.frame = (boy.frame + 1) % 8
         # kirby.x += kirby.dir * RUN_SPEED_PPS * game_framework.frame_time
         # kirby.x = clamp(25, kirby.x, 1600 - 25)
@@ -213,7 +213,7 @@ class JumpLeft:
 
     @staticmethod
     def do(kirby):
-        kirby.y_move -= 1000 * game_framework.frame_time
+        kirby.y_move -= server.gravity * game_framework.frame_time
         # boy.frame = (boy.frame + 1) % 8
         # kirby.x += kirby.dir * RUN_SPEED_PPS * game_framework.frame_time
         # kirby.x = clamp(25, kirby.x, 1600 - 25)
@@ -240,7 +240,7 @@ class JumpRight:
 
     @staticmethod
     def do(kirby):
-        kirby.y_move -= 1000 * game_framework.frame_time
+        kirby.y_move -= server.gravity * game_framework.frame_time
         # boy.frame = (boy.frame + 1) % 8
         # kirby.x += kirby.dir * RUN_SPEED_PPS * game_framework.frame_time
         # kirby.x = clamp(25, kirby.x, 1600 - 25)
@@ -253,6 +253,9 @@ class JumpRight:
         kirby.image.clip_draw(int(kirby.frame) * 100, 0, 100, 100, kirby.x, kirby.y, 90, 90)
 
 
+
+
+
 class StateMachine:
     def __init__(self, kirby):
         self.kirby = kirby
@@ -261,7 +264,8 @@ class StateMachine:
             Idle: {right_down: RunRigth, left_down: RunLeft, left_up: RunRigth, right_up: RunLeft, space_down: Jump},
             RunLeft: {right_down: Idle, left_up: Idle, space_down: JumpLeft},
             RunRigth: {left_down: Idle, right_up: Idle, space_down: JumpRight},
-            Jump: {right_down: JumpRight, left_down: JumpLeft, left_up: JumpRight, right_up: JumpLeft, on_the_ground: Idle},
+            Jump: {right_down: JumpRight, left_down: JumpLeft, left_up: JumpRight, right_up: JumpLeft,
+                   on_the_ground: Idle},
             JumpLeft: {right_down: Jump, left_up: Jump, on_the_ground: RunLeft},
             JumpRight: {left_down: Jump, right_up: Jump, on_the_ground: RunRigth}
         }
