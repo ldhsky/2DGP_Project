@@ -7,6 +7,7 @@ import server
 from background import Background
 from ground import Ground
 from kirby import Kirby
+from sonic import Sonic
 
 
 def init():
@@ -16,6 +17,7 @@ def init():
     game_world.add_object(server.background, 0)
 
     server.kirby = Kirby(400, 400)
+    server.kirby.player_number = 1
     game_world.add_object(server.kirby, 2)
     game_world.add_collision_pair('kirby:ground', server.kirby, None)
 
@@ -24,6 +26,11 @@ def init():
         game_world.add_object(o, 1)
         game_world.add_collision_pair('kirby:ground', None, o)
 
+    server.sonic = Sonic(1400, 400)
+    server.sonic.player_number = 2
+    game_world.add_object(server.sonic, 2)
+    game_world.add_collision_pair('sonic:ground', server.sonic, None)
+    game_world.add_collision_pair('kirby_inhale:sonic', None, server.sonic)
 
 def handle_events():
     events = get_events()
@@ -34,6 +41,7 @@ def handle_events():
             game_framework.quit()
         else:
             server.kirby.handle_event(event)
+            server.sonic.handle_event(event)
 
 
 

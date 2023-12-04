@@ -1,63 +1,86 @@
 from pico2d import *
 
 import game_framework
+import game_world
+import kirby_inhale
 import server
-
+from kirby_inhale import KirbyInhale
 
 def right_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_RIGHT
+    if server.kirby.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_RIGHT
+    elif server.kirby.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_d
 
 
 def right_up(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_RIGHT
+    if server.kirby.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_RIGHT
+    elif server.kirby.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_d
 
 
 def left_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_LEFT
+    if server.kirby.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_LEFT
+    elif server.kirby.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_a
 
 
 def left_up(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_LEFT
+    if server.kirby.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_LEFT
+    elif server.kirby.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_a
 
 
 def space_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_SPACE
+    if server.kirby.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_KP_0
+    elif server.kirby.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_j
 
 
 def space_up(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_SPACE
+    if server.kirby.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_KP_0
+    elif server.kirby.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_SPACE
 
 
-def w_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_w
+def skill1_down(e):
+    if server.kirby.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_KP_1
+    elif server.kirby.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_j
 
 
-def w_up(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_w
+def skill1_up(e):
+    if server.kirby.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_KP_1
+    elif server.kirby.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_j
 
 
-def a_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_a
+def skill2_down(e):
+    if server.kirby.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_KP_1
+    elif server.kirby.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_j
 
 
-def a_up(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_a
+def skill2_up(e):
+    if server.kirby.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_KP_1
+    elif server.kirby.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_j
 
 
-def s_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_s
-
-
-def s_up(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_s
-
-
-def d_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_d
-
-
-def d_up(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_d
+def guard(e):
+    if server.kirby.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_KP_1
+    elif server.kirby.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_j
 
 
 def time_out(e):
@@ -90,7 +113,6 @@ class Idle:
         elif kirby.dir == -1:
             kirby.action = 4
         kirby.speed = 0
-        kirby.dir = 0
 
     @staticmethod
     def exit(kirby, e):
@@ -113,7 +135,6 @@ class RunLeft:
     def enter(kirby, e):
         kirby.image = load_image("texture/kirby.png")
         kirby.dir, kirby.action = -1, 2
-
 
     @staticmethod
     def exit(kirby, e):
@@ -161,7 +182,7 @@ class Jump:
     @staticmethod
     def enter(kirby, e):
         if space_down(e):
-            kirby.jumpCount = 4
+            kirby.jumpCount = 5
             kirby.image = load_image('texture/kirby_jump.png')
             kirby.y_move = 800
         if kirby.dir == 1:
@@ -190,8 +211,7 @@ class JumpLeft:
     @staticmethod
     def enter(kirby, e):
         if space_down(e):
-            kirby.jumpCount = 4
-        if not kirby.flying:
+            kirby.jumpCount = 5
             kirby.y_move = 800
             kirby.image = load_image('texture/kirby_jump.png')
         kirby.dir = -1
@@ -215,8 +235,7 @@ class JumpRight:
     @staticmethod
     def enter(kirby, e):
         if space_down(e):
-            kirby.jumpCount = 4
-        if not kirby.flying:
+            kirby.jumpCount = 5
             kirby.y_move = 800
             kirby.image = load_image('texture/kirby_jump.png')
         kirby.dir = 1
@@ -242,8 +261,8 @@ class DoubleJump:
         if space_down(e):
             kirby.image = load_image('texture/kirby_doublejump.png')
             kirby.jumpCount -= 1
-        if kirby.jumpCount > 0:
-            kirby.y_move = 200
+            if kirby.jumpCount > 0:
+                kirby.y_move = 200
         if kirby.dir == 1:
             kirby.face_dir = True
         elif kirby.dir == -1:
@@ -272,8 +291,8 @@ class DoubleJumpLeft:
         if space_down(e):
             kirby.jumpCount -= 1
             kirby.image = load_image('texture/kirby_doublejump.png')
-        if kirby.jumpCount > 0:
-            kirby.y_move = 200
+            if kirby.jumpCount > 0:
+                kirby.y_move = 200
 
     @staticmethod
     def exit(kirby, e):
@@ -296,9 +315,8 @@ class DoubleJumpRight:
         if space_down(e):
             kirby.jumpCount -= 1
             kirby.image = load_image('texture/kirby_doublejump.png')
-        if kirby.jumpCount > 0:
-            kirby.y_move = 200
-
+            if kirby.jumpCount > 0:
+                kirby.y_move = 200
 
     @staticmethod
     def exit(kirby, e):
@@ -315,22 +333,54 @@ class DoubleJumpRight:
         kirby.image.clip_draw(int(kirby.frame) * 100, 0, 100, 100, kirby.x, kirby.y, 90, 90)
 
 
+class Inhale:
+    @staticmethod
+    def enter(kirby, e):
+        kirby.image = load_image("texture/kirby_inhale.png")
+        kirby.inhale = KirbyInhale(kirby.x + 75 * kirby.dir, kirby.y)
+        game_world.add_object(kirby.inhale)
+        game_world.add_collision_pair('kirby_inhale:sonic', kirby.inhale, None)
+
+    @staticmethod
+    def exit(kirby, e):
+        game_world.remove_object(kirby.inhale)
+        kirby.inhale = None
+
+    @staticmethod
+    def do(kirby):
+        kirby.y_move -= server.gravity * game_framework.frame_time
+        if not kirby.flying:
+            kirby.y_move = 0
+        kirby.y += kirby.y_move * game_framework.frame_time
+
+    @staticmethod
+    def draw(kirby):
+        if kirby.dir == 1:
+            kirby.image.clip_draw(int(kirby.frame) * 100, 0, 100, 100, kirby.x, kirby.y)
+        elif kirby.dir == -1:
+            kirby.image.clip_composite_draw(int(kirby.frame) * 100, 0, 100, 100, 0, 'h', kirby.x, kirby.y, 100, 100)
+
 
 class StateMachine:
     def __init__(self, kirby):
         self.kirby = kirby
         self.cur_state = Idle
         self.transitions = {
-            Idle: {right_down: RunRight, left_down: RunLeft, left_up: RunRight, right_up: RunLeft, space_down: Jump},
-            RunLeft: {right_down: Idle, left_up: Idle, space_down: JumpLeft},
-            RunRight: {left_down: Idle, right_up: Idle, space_down: JumpRight},
+            Idle: {right_down: RunRight, left_down: RunLeft, space_down: Jump,
+                   skill1_down: Inhale},
+            RunLeft: {right_down: RunRight, left_up: Idle, space_down: JumpLeft},
+            RunRight: {left_down: RunLeft, right_up: Idle, space_down: JumpRight},
             Jump: {right_down: JumpRight, left_down: JumpLeft, left_up: JumpRight, right_up: JumpLeft,
                    on_the_ground: Idle, space_down: DoubleJump},
             JumpLeft: {right_down: Jump, left_up: Jump, on_the_ground: RunLeft, space_down: DoubleJumpLeft},
             JumpRight: {left_down: Jump, right_up: Jump, on_the_ground: RunRight, space_down: DoubleJumpRight},
-            DoubleJump: {on_the_ground: Idle, space_down: DoubleJump, left_down: DoubleJumpLeft, right_down: DoubleJumpRight},
-            DoubleJumpLeft: {on_the_ground: RunLeft, space_down: DoubleJumpLeft, left_up: DoubleJump, right_down: DoubleJumpRight},
-            DoubleJumpRight: {on_the_ground: RunRight, space_down: DoubleJumpRight, right_up: DoubleJump, left_down: DoubleJumpLeft}
+            DoubleJump: {on_the_ground: Idle, space_down: DoubleJump, left_down: DoubleJumpLeft,
+                         right_down: DoubleJumpRight},
+            DoubleJumpLeft: {on_the_ground: RunLeft, space_down: DoubleJumpLeft, left_up: DoubleJump,
+                             right_down: DoubleJumpRight},
+            DoubleJumpRight: {on_the_ground: RunRight, space_down: DoubleJumpRight, right_up: DoubleJump,
+                              left_down: DoubleJumpLeft},
+            Inhale: {skill1_up: Idle}
         }
 
     def start(self):
@@ -372,6 +422,8 @@ class Kirby:
         self.y_move = 0
         self.face_dir = True
         self.jumpCount = 4
+        self.player_number = 0
+        self.inhale = None
         self.left, self.bottom, self.right, self.top = self.get_bb()
         self.image = load_image('texture/kirby.png')
         self.state_machine = StateMachine(self)
@@ -379,8 +431,6 @@ class Kirby:
 
     def update(self):
         self.state_machine.update()
-        # self.x = clamp(50.0, self.x, server.background.w - 50.0)
-        # self.y = clamp(50.0, self.y, server.background.h - 50.0)
         self.left, self.bottom, self.right, self.top = self.get_bb()
         for ground in server.grounds:
             ground_left, ground_bottom, ground_right, ground_top = ground.get_bb()
@@ -392,12 +442,10 @@ class Kirby:
             else:
                 self.flying = True
 
-
     def handle_event(self, event):
         self.state_machine.handle_event(('INPUT', event))
 
     def draw(self):
-        #self.image.clip_draw(int(self.frame) * 100, self.action * 100, 100, 100, self.x, self.y)
         self.state_machine.draw()
         draw_rectangle(*self.get_bb())
 
@@ -405,4 +453,5 @@ class Kirby:
         return self.x - 25, self.y - 50, self.x + 25, self.y
 
     def handle_collision(self, group, other):
-        pass
+        if group == 'kirby:ground':
+            pass
