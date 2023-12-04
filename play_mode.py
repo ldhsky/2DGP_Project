@@ -19,9 +19,10 @@ def init():
     game_world.add_object(server.kirby, 2)
     game_world.add_collision_pair('kirby:ground', server.kirby, None)
 
-    ground = Ground(400, 300)
-    game_world.add_object(ground, 1)
-    game_world.add_collision_pair('kirby:ground', None, ground)
+    server.grounds = [Ground(1000, 300), Ground(600, 600), Ground(200, 300)]
+    for o in server.grounds:
+        game_world.add_object(o, 1)
+        game_world.add_collision_pair('kirby:ground', None, o)
 
 
 def handle_events():
