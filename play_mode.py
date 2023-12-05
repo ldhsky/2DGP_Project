@@ -16,21 +16,28 @@ def init():
     server.background = Background()
     game_world.add_object(server.background, 0)
 
-    server.kirby = Kirby(400, 400)
-    server.kirby.player_number = 1
-    game_world.add_object(server.kirby, 2)
-    game_world.add_collision_pair('kirby:ground', server.kirby, None)
+    server.player1 = Kirby(400, 400)
+    server.player1.player_number = 1
+
+    game_world.add_object(server.player1, 2)
+    game_world.add_collision_pair('kirby:ground', server.player1, None)
 
     server.grounds = [Ground(1000, 300), Ground(600, 600), Ground(200, 300)]
     for o in server.grounds:
         game_world.add_object(o, 1)
         game_world.add_collision_pair('kirby:ground', None, o)
 
+    server.player2 = Sonic(1400, 400)
+    server.player2.player_number = 2
+    game_world.add_object(server.player2, 2)
+    game_world.add_collision_pair('sonic:ground', server.player2, None)
+    game_world.add_collision_pair('kirby_inhale:sonic', None, server.player2)
+
+    server.kirby = Kirby(400, 400)
+    server.kirby.player_number = 1
     server.sonic = Sonic(1400, 400)
     server.sonic.player_number = 2
-    game_world.add_object(server.sonic, 2)
-    game_world.add_collision_pair('sonic:ground', server.sonic, None)
-    game_world.add_collision_pair('kirby_inhale:sonic', None, server.sonic)
+
 
 def handle_events():
     events = get_events()
@@ -40,8 +47,8 @@ def handle_events():
         elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
             game_framework.quit()
         else:
-            server.kirby.handle_event(event)
-            server.sonic.handle_event(event)
+            server.player1.handle_event(event)
+            server.player2.handle_event(event)
 
 
 

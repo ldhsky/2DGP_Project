@@ -6,6 +6,7 @@ import kirby_inhale
 import server
 from kirby_inhale import KirbyInhale
 
+
 def right_down(e):
     if server.kirby.player_number == 1:
         return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_RIGHT
@@ -25,6 +26,33 @@ def left_down(e):
         return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_LEFT
     elif server.kirby.player_number == 2:
         return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_a
+
+def bottom_down(e):
+    if server.kirby.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_DOWN
+    elif server.kirby.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_s
+
+
+def bottom_up(e):
+    if server.kirby.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_DOWN
+    elif server.kirby.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_s
+
+
+def top_down(e):
+    if server.kirby.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_UP
+    elif server.kirby.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_w
+
+
+def top_up(e):
+    if server.kirby.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_UP
+    elif server.kirby.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_w
 
 
 def left_up(e):
@@ -89,6 +117,18 @@ def time_out(e):
 
 def on_the_ground(e):
     return e[0] == 'NONE' and e[1] == 0
+
+
+def eat(e):
+    return e[0] == 'EAT' and e[1] == 0
+
+
+def end_inhale(e):
+    return e[0] == 'END_INHALE' and e[1] == 0
+
+
+def end_eat(e):
+    return e[0] == 'END_EAT' and e[1] == 0
 
 
 # Boy Run Speed
@@ -353,6 +393,118 @@ class Inhale:
             kirby.y_move = 0
         kirby.y += kirby.y_move * game_framework.frame_time
 
+        if kirby.player_number == 1 and server.inhaled_time2 >= 0.5 or kirby.player_number == 2 and server.inhaled_time1 >= 0.5:
+            kirby.state_machine.handle_event(('EAT', 0))
+
+    @staticmethod
+    def draw(kirby):
+        if kirby.dir == 1:
+            kirby.image.clip_draw(int(kirby.frame) * 100, 0, 100, 100, kirby.x, kirby.y)
+        elif kirby.dir == -1:
+            kirby.image.clip_composite_draw(int(kirby.frame) * 100, 0, 100, 100, 0, 'h', kirby.x, kirby.y, 100, 100)
+
+
+class Eat:
+    @staticmethod
+    def enter(kirby, e):
+        if eat(e):
+            kirby.eating_time = get_time()
+        kirby.image = load_image("texture/kirby_eating.png")
+        kirby.inhale = KirbyInhale(kirby.x + 75 * kirby.dir, kirby.y)
+
+    @staticmethod
+    def exit(kirby, e):
+        pass
+
+    @staticmethod
+    def do(kirby):
+        if get_time() - kirby.eating_time > 3.0:
+            kirby.state_machine.handle_event(('END_INHALE', 0))
+
+        kirby.y_move -= server.gravity * game_framework.frame_time
+        if not kirby.flying:
+            kirby.y_move = 0
+        kirby.y += kirby.y_move * game_framework.frame_time
+
+    @staticmethod
+    def draw(kirby):
+        if kirby.dir == 1:
+            kirby.image.clip_draw(int(kirby.frame) * 100, 0, 100, 100, kirby.x, kirby.y)
+        elif kirby.dir == -1:
+            kirby.image.clip_composite_draw(int(kirby.frame) * 100, 0, 100, 100, 0, 'h', kirby.x, kirby.y, 100, 100)
+
+
+class EatLeft:
+    @staticmethod
+    def enter(kirby, e):
+        kirby.image = load_image("texture/kirby_eating.png")
+        kirby.dir = -1
+
+    @staticmethod
+    def exit(kirby, e):
+        pass
+
+    @staticmethod
+    def do(kirby):
+        if get_time() - kirby.eating_time > 3.0:
+            kirby.state_machine.handle_event(('END_INHALE', 0))
+
+        kirby.y_move -= server.gravity * game_framework.frame_time
+        if not kirby.flying:
+            kirby.y_move = 0
+        kirby.y += kirby.y_move * game_framework.frame_time
+        kirby.x -= RUN_SPEED_PPS * game_framework.frame_time
+
+    @staticmethod
+    def draw(kirby):
+        kirby.image.clip_composite_draw(int(kirby.frame) * 100, 0, 100, 100, 0, 'h', kirby.x, kirby.y, 100, 100)
+
+
+class EatRight:
+    @staticmethod
+    def enter(kirby, e):
+        kirby.image = load_image("texture/kirby_eating.png")
+        kirby.dir = 1
+
+    @staticmethod
+    def exit(kirby, e):
+        pass
+
+    @staticmethod
+    def do(kirby):
+        if get_time() - kirby.eating_time > 3.0:
+            kirby.state_machine.handle_event(('END_INHALE', 0))
+
+        kirby.y_move -= server.gravity * game_framework.frame_time
+        if not kirby.flying:
+            kirby.y_move = 0
+        kirby.y += kirby.y_move * game_framework.frame_time
+        kirby.x += RUN_SPEED_PPS * game_framework.frame_time
+
+    @staticmethod
+    def draw(kirby):
+        kirby.image.clip_draw(int(kirby.frame) * 100, 0, 100, 100, kirby.x, kirby.y)
+
+
+class EndInhale:
+    @staticmethod
+    def enter(kirby, e):
+        kirby.frame = 0
+        kirby.image = load_image("texture/kirby_end_inhale.png")
+
+    @staticmethod
+    def exit(kirby, e):
+        pass
+
+    @staticmethod
+    def do(kirby):
+        if kirby.frame >= 8:
+            kirby.state_machine.handle_event(('END_EAT', 0))
+        kirby.y_move -= server.gravity * game_framework.frame_time
+        if not kirby.flying:
+            kirby.y_move = 0
+        kirby.y += kirby.y_move * game_framework.frame_time
+
     @staticmethod
     def draw(kirby):
         if kirby.dir == 1:
@@ -372,15 +524,19 @@ class StateMachine:
             RunRight: {left_down: RunLeft, right_up: Idle, space_down: JumpRight},
             Jump: {right_down: JumpRight, left_down: JumpLeft, left_up: JumpRight, right_up: JumpLeft,
                    on_the_ground: Idle, space_down: DoubleJump},
-            JumpLeft: {right_down: Jump, left_up: Jump, on_the_ground: RunLeft, space_down: DoubleJumpLeft},
-            JumpRight: {left_down: Jump, right_up: Jump, on_the_ground: RunRight, space_down: DoubleJumpRight},
+            JumpLeft: {right_down: JumpRight, left_up: Jump, on_the_ground: RunLeft, space_down: DoubleJumpLeft},
+            JumpRight: {left_down: JumpLeft, right_up: Jump, on_the_ground: RunRight, space_down: DoubleJumpRight},
             DoubleJump: {on_the_ground: Idle, space_down: DoubleJump, left_down: DoubleJumpLeft,
                          right_down: DoubleJumpRight},
             DoubleJumpLeft: {on_the_ground: RunLeft, space_down: DoubleJumpLeft, left_up: DoubleJump,
                              right_down: DoubleJumpRight},
             DoubleJumpRight: {on_the_ground: RunRight, space_down: DoubleJumpRight, right_up: DoubleJump,
                               left_down: DoubleJumpLeft},
-            Inhale: {skill1_up: Idle}
+            Inhale: {skill1_up: Idle, eat: Eat},
+            Eat: {end_inhale: EndInhale, left_down: EatLeft, right_down: EatRight, bottom_down: EndInhale},
+            EatLeft: {end_inhale: EndInhale, left_up: Eat, right_down: EatRight, bottom_down: EndInhale},
+            EatRight: {end_inhale: EndInhale, right_up: Eat, left_up: EatLeft, bottom_down: EndInhale},
+            EndInhale: {end_eat: Idle}
         }
 
     def start(self):
@@ -393,6 +549,10 @@ class StateMachine:
             self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 10
         elif self.cur_state == DoubleJump or self.cur_state == DoubleJumpLeft or self.cur_state == DoubleJumpRight:
             self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 6
+        elif self.cur_state == Eat:
+            self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 16
+        elif self.cur_state == EndInhale:
+            self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 9
         else:
             self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 8
         self.kirby.x += math.cos(self.kirby.dir) * self.kirby.speed * game_framework.frame_time
@@ -424,6 +584,7 @@ class Kirby:
         self.jumpCount = 4
         self.player_number = 0
         self.inhale = None
+        self.eating_time = 0
         self.left, self.bottom, self.right, self.top = self.get_bb()
         self.image = load_image('texture/kirby.png')
         self.state_machine = StateMachine(self)

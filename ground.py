@@ -3,7 +3,7 @@ from pico2d import *
 
 class Ground:
     def __init__(self, _x, _y, ):
-        self.image = load_image('texture/ground.png')
+        self.image = load_image('texture/ground2.png')
         self.w = self.image.w
         self.h = self.image.h
         self.x = _x

@@ -3,7 +3,7 @@ from pico2d import *
 class Background:
 
     def __init__(self):
-        self.image = load_image('texture/background1.png')
+        self.image = load_image('texture/background3.png')
         self.cw = get_canvas_width()
         self.ch = get_canvas_height()
         self.w = self.image.w
@@ -12,7 +12,8 @@ class Background:
 
 
     def draw(self):
-        self.image.clip_draw_to_origin(900, 500, self.cw, self.ch, 0, 0)
+        # self.image.clip_draw_to_origin(900, 500, self.cw, self.ch, 0, 0)
+        self.image.clip_draw(0, 0, self.cw, self.ch, self.cw/2, self.ch/2)
 
     def update(self):
         #self.window_left = clamp(0, int(server.boy.x) - self.cw // 2, self.w - self.cw - 1)

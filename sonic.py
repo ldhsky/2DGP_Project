@@ -305,8 +305,9 @@ class DoubleJumpRight:
 class Inhaled:
     @staticmethod
     def enter(sonic, e):
-        if space_down(e):
-            sonic.image = load_image('texture/temp.png')
+        sonic.image = load_image('texture/temp.png')
+        sonic.inhaled_time = 0
+
 
     @staticmethod
     def exit(sonic, e):
@@ -314,8 +315,8 @@ class Inhaled:
 
     @staticmethod
     def do(sonic):
-        sonic.y = server.kirby.y
-        sonic.x = server.kirby.x
+        sonic.y = server.player1.y
+        sonic.x = server.player1.x
 
     @staticmethod
     def draw(sonic):
@@ -425,6 +426,15 @@ class Sonic:
 
     def handle_collision(self, group, other):
         if group == 'kirby_inhale:sonic':
-            self.inhaled_time += game_framework.frame_time
-            if self.inhaled_time >= 0.5:
-                self.state_machine.handle_event(('INHALED', 0))
+            if self.player_number == 1:
+                server.inhaled_time1 += game_framework.frame_time
+            elif self.player_number == 2:
+                server.inhaled_time2 += game_framework.frame_time
+        else:
+            if self.player_number == 1:
+                server.inhaled_time1 = 0
+            elif self.player_number == 2:
+                server.inhaled_time2 = 0
+
+        if self.player_number == 1 and server.inhaled_time1 >= 0.5 or self.player_number == 2 and server.inhaled_time2 >= 0.5:
+            self.state_machine.handle_event(('INHALED', 0))

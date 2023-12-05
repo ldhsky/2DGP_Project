@@ -1,5 +1,7 @@
 from pico2d import *
 
+import server
+
 
 class KirbyInhale:
     def __init__(self, _x, _y, ):
@@ -16,6 +18,8 @@ class KirbyInhale:
     def update(self):
         #self.window_left = clamp(0, int(server.boy.x) - self.cw // 2, self.w - self.cw - 1)
         #self.window_bottom = clamp(0, int(server.boy.y) - self.ch // 2, self.h - self.ch - 1)
+        self.x = server.player1.x + 75 * server.player1.dir
+        self.y = server.player1.y
         pass
 
     def handle_event(self, event):
