@@ -4,6 +4,10 @@ import game_framework
 import server
 
 
+def respawn(e):
+    return e[0] == 'RESPAWN' and e[1] == 0
+
+
 def right_down(e):
     if server.sonic.player_number == 1:
         return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_RIGHT
@@ -57,9 +61,52 @@ def on_the_ground(e):
 def inhaled(e):
     return e[0] == 'INHALED' and e[1] == 0
 
+
+def skill1_down(e):
+    if server.sonic.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_KP_1
+    elif server.sonic.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_j
+
+
+def skill1_up(e):
+    if server.sonic.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_KP_1
+    elif server.sonic.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_j
+
+
+def skill2_down(e):
+    if server.sonic.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_KP_1
+    elif server.sonic.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_j
+
+
+def skill2_up(e):
+    if server.sonic.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_KP_1
+    elif server.sonic.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_j
+
+def knockback(e):
+    return e[0] == 'KNOCKBACK' and e[1] == 0
+
+
+def end_knockback(e):
+    return e[0] == 'END_KNOCKBACK' and e[1] == 0
+
+
+def guard(e):
+    if server.sonic.player_number == 1:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_KP_1
+    elif server.sonic.player_number == 2:
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_j
+
+
 # Boy Run Speed
 PIXEL_PER_METER = (10.0 / 0.1)  # 10 pixel 30 cm
-RUN_SPEED_KMPH = 15.0  # Km / Hour
+RUN_SPEED_KMPH = 20.0  # Km / Hour
 RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
 RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
 RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
@@ -69,6 +116,33 @@ TIME_PER_ACTION = 0.5
 ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
 FRAMES_PER_ACTION = 8
 
+
+class Respwan:
+    @staticmethod
+    def enter(sonic, e):
+        sonic.image = load_image("texture/sonic.png")
+        if sonic.dir == 1:
+            sonic.action = 5
+        elif sonic.dir == -1:
+            sonic.action = 4
+        sonic.x = 800
+        sonic.y = 900
+        sonic.life -= 1
+
+    @staticmethod
+    def exit(sonic, e):
+        pass
+
+    @staticmethod
+    def do(sonic):
+        pass
+
+    @staticmethod
+    def draw(sonic):
+        if sonic.dir == 1:
+            sonic.image.clip_draw(int(sonic.frame) * 100, 0, 100, 100, sonic.x, sonic.y)
+        elif sonic.dir == -1:
+            sonic.image.clip_composite_draw(int(sonic.frame) * 100, 0, 100, 100, 0, 'h', sonic.x, sonic.y, 100, 100)
 
 class Idle:
     @staticmethod
@@ -323,31 +397,71 @@ class Inhaled:
         sonic.image.clip_draw(int(sonic.frame) * 100, 0, 100, 100, sonic.x, sonic.y, 90, 90)
 
 
+class KnockBack:
+    @staticmethod
+    def enter(sonic, e):
+        sonic.image = load_image("texture/sonic_knockback.png")
+        if sonic.dir == 1:
+            sonic.action = 5
+        elif sonic.dir == -1:
+            sonic.action = 4
+        sonic.damage += 200
+        sonic.x_move = sonic.damage * 5
+        sonic.y_move = sonic.damage * 2
+        sonic.knockback_time = get_time()
+
+    @staticmethod
+    def exit(sonic, e):
+        pass
+
+    @staticmethod
+    def do(sonic):
+        if get_time() - sonic.knockback_time > 0.5:
+            sonic.state_machine.handle_event(('END_KNOCKBACK', 0))
+        sonic.y_move -= server.gravity * game_framework.frame_time
+        sonic.y += sonic.y_move * game_framework.frame_time
+        sonic.x_move -= sonic.x_move / 50
+        sonic.y_move -= sonic.y_move / 50
+        if sonic.player_number == 1:
+            sonic.x += sonic.x_move * server.player2.dir * game_framework.frame_time
+        elif sonic.player_number == 2:
+            sonic.x += sonic.x_move * server.player1.dir * game_framework.frame_time
+
+    @staticmethod
+    def draw(sonic):
+        if sonic.dir == 1:
+            sonic.image.clip_draw(int(sonic.frame) * 100, 0, 100, 100, sonic.x, sonic.y)
+        elif sonic.dir == -1:
+            sonic.image.clip_composite_draw(int(sonic.frame) * 100, 0, 100, 100, 0, 'h', sonic.x, sonic.y, 100, 100)
+
+
 class StateMachine:
     def __init__(self, sonic):
         self.sonic = sonic
         self.cur_state = Idle
         self.transitions = {
             Idle: {right_down: RunRight, left_down: RunLeft, left_up: RunRight, right_up: RunLeft, space_down: Jump,
-                   inhaled: Inhaled},
+                   inhaled: Inhaled, knockback: KnockBack, respawn: Respwan},
             RunLeft: {right_down: Idle, left_up: Idle, space_down: JumpLeft,
-                      inhaled: Inhaled},
+                      inhaled: Inhaled, respawn: Respwan},
             RunRight: {left_down: Idle, right_up: Idle, space_down: JumpRight,
-                       inhaled: Inhaled},
+                       inhaled: Inhaled, respawn: Respwan},
             Jump: {right_down: JumpRight, left_down: JumpLeft, left_up: JumpRight, right_up: JumpLeft,
                    on_the_ground: Idle, space_down: DoubleJump,
-                   inhaled: Inhaled},
+                   inhaled: Inhaled, respawn: Respwan},
             JumpLeft: {right_down: Jump, left_up: Jump, on_the_ground: RunLeft, space_down: DoubleJumpLeft,
-                       inhaled: Inhaled},
+                       inhaled: Inhaled, respawn: Respwan},
             JumpRight: {left_down: Jump, right_up: Jump, on_the_ground: RunRight, space_down: DoubleJumpRight,
-                        inhaled: Inhaled},
+                        inhaled: Inhaled, respawn: Respwan},
             DoubleJump: {on_the_ground: Idle, space_down: DoubleJump, left_down: DoubleJumpLeft, right_down: DoubleJumpRight,
-                         inhaled: Inhaled},
+                         inhaled: Inhaled, respawn: Respwan},
             DoubleJumpLeft: {on_the_ground: RunLeft, space_down: DoubleJumpLeft, left_up: DoubleJump, right_down: DoubleJumpRight,
-                             inhaled: Inhaled},
+                             inhaled: Inhaled, respawn: Respwan},
             DoubleJumpRight: {on_the_ground: RunRight, space_down: DoubleJumpRight, right_up: DoubleJump, left_down: DoubleJumpLeft,
-                              inhaled: Inhaled},
-            Inhaled: {}
+                              inhaled: Inhaled, respawn: Respwan},
+            Inhaled: {knockback: KnockBack, respawn: Respwan},
+            KnockBack: {end_knockback: Idle, respawn: Respwan},
+            Respwan: {space_down: Jump}
         }
 
     def start(self):
@@ -360,6 +474,10 @@ class StateMachine:
             self.sonic.frame = (self.sonic.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 4
         elif self.cur_state == DoubleJump or self.cur_state == DoubleJumpLeft or self.cur_state == DoubleJumpRight:
             self.sonic.frame = (self.sonic.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 6
+        elif self.cur_state == KnockBack:
+            self.sonic.frame = (self.sonic.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 1
+        elif self.cur_state == Respwan:
+            self.sonic.frame = (self.sonic.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 10
         else:
             self.sonic.frame = (self.sonic.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 8
         self.sonic.x += math.cos(self.sonic.dir) * self.sonic.speed * game_framework.frame_time
@@ -386,11 +504,15 @@ class Sonic:
         self.flying = False
         self.frame = 0
         self.action = 5
+        self.x_move = 0
         self.y_move = 0
         self.face_dir = True
         self.jumpCount = 1
         self.player_number = 0
         self.inhaled_time = 0
+        self.knockback_time = 0
+        self.damage = 0.0
+        self.life = 3
         self.left, self.bottom, self.right, self.top = self.get_bb()
         self.image = load_image('texture/kirby.png')
         self.state_machine = StateMachine(self)
@@ -438,3 +560,6 @@ class Sonic:
 
         if self.player_number == 1 and server.inhaled_time1 >= 0.5 or self.player_number == 2 and server.inhaled_time2 >= 0.5:
             self.state_machine.handle_event(('INHALED', 0))
+
+        if group == 'sonic:deadline':
+            self.state_machine.handle_event(('RESPAWN', 0))

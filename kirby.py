@@ -2,9 +2,8 @@ from pico2d import *
 
 import game_framework
 import game_world
-import kirby_inhale
 import server
-from kirby_inhale import KirbyInhale
+from kirby_skill.kirby_inhale import KirbyInhale
 
 
 def right_down(e):
@@ -66,7 +65,7 @@ def space_down(e):
     if server.kirby.player_number == 1:
         return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_KP_0
     elif server.kirby.player_number == 2:
-        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_j
+        return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_SPACE
 
 
 def space_up(e):
@@ -131,9 +130,13 @@ def end_eat(e):
     return e[0] == 'END_EAT' and e[1] == 0
 
 
+def respawn(e):
+    return e[0] == 'RESPAWN' and e[1] == 0
+
+
 # Boy Run Speed
 PIXEL_PER_METER = (10.0 / 0.1)  # 10 pixel 30 cm
-RUN_SPEED_KMPH = 15.0  # Km / Hour
+RUN_SPEED_KMPH = 10.0  # Km / Hour
 RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
 RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
 RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
@@ -142,6 +145,84 @@ RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
 TIME_PER_ACTION = 0.5
 ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
 FRAMES_PER_ACTION = 8
+
+
+# class Delay:
+#     @staticmethod
+#     def enter(kirby, e):
+#         kirby.image = load_image("texture/kirby.png")
+#         if kirby.dir == 1:
+#             kirby.action = 5
+#         elif kirby.dir == -1:
+#             kirby.action = 4
+#         kirby.speed = 0
+#
+#     @staticmethod
+#     def exit(kirby, e):
+#         pass
+#
+#     @staticmethod
+#     def do(kirby):
+#         kirby.y_move -= server.gravity * game_framework.frame_time
+#         if not kirby.flying:
+#             kirby.y_move = 0
+#         kirby.y += kirby.y_move * game_framework.frame_time
+#
+#     @staticmethod
+#     def draw(kirby):
+#         kirby.image.clip_draw(int(kirby.frame) * 100, kirby.action * 100, 100, 100, kirby.x, kirby.y)
+
+
+class Respwan:
+    @staticmethod
+    def enter(kirby, e):
+        kirby.image = load_image("texture/kirby.png")
+        kirby.x = 800
+        kirby.y = 900
+        kirby.life -= 1
+
+    @staticmethod
+    def exit(kirby, e):
+        pass
+
+    @staticmethod
+    def do(kirby):
+        pass
+
+    @staticmethod
+    def draw(kirby):
+        if kirby.dir == 1:
+            kirby.image.clip_draw(int(kirby.frame) * 100, 500, 100, 100, kirby.x, kirby.y)
+        elif kirby.dir == -1:
+            kirby.image.clip_composite_draw(int(kirby.frame) * 100, 500, 100, 100, 0, 'h', kirby.x, kirby.y, 100, 100)
+
+
+class Knockback:
+    @staticmethod
+    def enter(kirby, e):
+        kirby.image = load_image("texture/kirby.png")
+        if kirby.dir == 1:
+            kirby.action = 5
+        elif kirby.dir == -1:
+            kirby.action = 4
+        kirby.speed = 0
+
+    @staticmethod
+    def exit(kirby, e):
+        pass
+
+    @staticmethod
+    def do(kirby):
+        kirby.y_move -= server.gravity * game_framework.frame_time
+        if not kirby.flying:
+            kirby.y_move = 0
+        kirby.y += kirby.y_move * game_framework.frame_time
+
+    @staticmethod
+    def draw(kirby):
+        kirby.image.clip_draw(int(kirby.frame) * 100, kirby.action * 100, 100, 100, kirby.x, kirby.y)
+
+
 
 
 class Idle:
@@ -380,6 +461,10 @@ class Inhale:
         kirby.inhale = KirbyInhale(kirby.x + 75 * kirby.dir, kirby.y)
         game_world.add_object(kirby.inhale)
         game_world.add_collision_pair('kirby_inhale:sonic', kirby.inhale, None)
+        if kirby.player_number == 1:
+            server.inhaled_time2 = 0
+        elif kirby.player_number == 2:
+            server.inhaled_time1 = 0
 
     @staticmethod
     def exit(kirby, e):
@@ -494,7 +579,10 @@ class EndInhale:
 
     @staticmethod
     def exit(kirby, e):
-        pass
+        if kirby.player_number == 1:
+            server.player2.state_machine.handle_event(('KNOCKBACK', 0))
+        elif kirby.player_number == 2:
+            server.player1.state_machine.handle_event(('KNOCKBACK', 0))
 
     @staticmethod
     def do(kirby):
@@ -512,6 +600,43 @@ class EndInhale:
         elif kirby.dir == -1:
             kirby.image.clip_composite_draw(int(kirby.frame) * 100, 0, 100, 100, 0, 'h', kirby.x, kirby.y, 100, 100)
 
+class KnockBack:
+    @staticmethod
+    def enter(kirby, e):
+        kirby.image = load_image("texture/sonic_knockback.png")
+        if kirby.dir == 1:
+            kirby.action = 5
+        elif kirby.dir == -1:
+            kirby.action = 4
+        kirby.damage += 200
+        kirby.x_move = kirby.damage * 5
+        kirby.y_move = kirby.damage * 2
+        kirby.knockback_time = get_time()
+
+    @staticmethod
+    def exit(kirby, e):
+        pass
+
+    @staticmethod
+    def do(kirby):
+        if get_time() - kirby.knockback_time > 0.5:
+            kirby.state_machine.handle_event(('END_KNOCKBACK', 0))
+        kirby.y_move -= server.gravity * game_framework.frame_time
+        kirby.y += kirby.y_move * game_framework.frame_time
+        kirby.x_move -= kirby.x_move / 50
+        kirby.y_move -= kirby.y_move / 50
+        if kirby.player_number == 1:
+            kirby.x += kirby.x_move * server.player2.dir * game_framework.frame_time
+        elif kirby.player_number == 2:
+            kirby.x += kirby.x_move * server.player1.dir * game_framework.frame_time
+
+    @staticmethod
+    def draw(sonic):
+        if sonic.dir == 1:
+            sonic.image.clip_draw(int(sonic.frame) * 100, 0, 100, 100, sonic.x, sonic.y)
+        elif sonic.dir == -1:
+            sonic.image.clip_composite_draw(int(sonic.frame) * 100, 0, 100, 100, 0, 'h', sonic.x, sonic.y, 100, 100)
+
 
 class StateMachine:
     def __init__(self, kirby):
@@ -519,24 +644,25 @@ class StateMachine:
         self.cur_state = Idle
         self.transitions = {
             Idle: {right_down: RunRight, left_down: RunLeft, space_down: Jump,
-                   skill1_down: Inhale},
-            RunLeft: {right_down: RunRight, left_up: Idle, space_down: JumpLeft},
-            RunRight: {left_down: RunLeft, right_up: Idle, space_down: JumpRight},
+                   skill1_down: Inhale, respawn: Respwan},
+            RunLeft: {right_down: RunRight, left_up: Idle, space_down: JumpLeft, respawn: Respwan},
+            RunRight: {left_down: RunLeft, right_up: Idle, space_down: JumpRight, respawn: Respwan},
             Jump: {right_down: JumpRight, left_down: JumpLeft, left_up: JumpRight, right_up: JumpLeft,
-                   on_the_ground: Idle, space_down: DoubleJump},
-            JumpLeft: {right_down: JumpRight, left_up: Jump, on_the_ground: RunLeft, space_down: DoubleJumpLeft},
-            JumpRight: {left_down: JumpLeft, right_up: Jump, on_the_ground: RunRight, space_down: DoubleJumpRight},
+                   on_the_ground: Idle, space_down: DoubleJump, respawn: Respwan},
+            JumpLeft: {right_down: JumpRight, left_up: Jump, on_the_ground: RunLeft, space_down: DoubleJumpLeft, respawn: Respwan},
+            JumpRight: {left_down: JumpLeft, right_up: Jump, on_the_ground: RunRight, space_down: DoubleJumpRight, respawn: Respwan},
             DoubleJump: {on_the_ground: Idle, space_down: DoubleJump, left_down: DoubleJumpLeft,
-                         right_down: DoubleJumpRight},
+                         right_down: DoubleJumpRight, respawn: Respwan},
             DoubleJumpLeft: {on_the_ground: RunLeft, space_down: DoubleJumpLeft, left_up: DoubleJump,
-                             right_down: DoubleJumpRight},
+                             right_down: DoubleJumpRight, respawn: Respwan},
             DoubleJumpRight: {on_the_ground: RunRight, space_down: DoubleJumpRight, right_up: DoubleJump,
-                              left_down: DoubleJumpLeft},
-            Inhale: {skill1_up: Idle, eat: Eat},
-            Eat: {end_inhale: EndInhale, left_down: EatLeft, right_down: EatRight, bottom_down: EndInhale},
-            EatLeft: {end_inhale: EndInhale, left_up: Eat, right_down: EatRight, bottom_down: EndInhale},
-            EatRight: {end_inhale: EndInhale, right_up: Eat, left_up: EatLeft, bottom_down: EndInhale},
-            EndInhale: {end_eat: Idle}
+                              left_down: DoubleJumpLeft, respawn: Respwan},
+            Inhale: {skill1_up: Idle, eat: Eat, respawn: Respwan},
+            Eat: {end_inhale: EndInhale, left_down: EatLeft, right_down: EatRight, bottom_down: EndInhale, respawn: Respwan},
+            EatLeft: {end_inhale: EndInhale, left_up: Eat, right_down: EatRight, bottom_down: EndInhale, respawn: Respwan},
+            EatRight: {end_inhale: EndInhale, right_up: Eat, left_up: EatLeft, bottom_down: EndInhale, respawn: Respwan},
+            EndInhale: {end_eat: Idle, respawn: Respwan},
+            Respwan: {space_down: Idle}
         }
 
     def start(self):
@@ -549,8 +675,8 @@ class StateMachine:
             self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 10
         elif self.cur_state == DoubleJump or self.cur_state == DoubleJumpLeft or self.cur_state == DoubleJumpRight:
             self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 6
-        elif self.cur_state == Eat:
-            self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 16
+        elif self.cur_state == Eat or self.cur_state == Respwan:
+            self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 20
         elif self.cur_state == EndInhale:
             self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 9
         else:
@@ -579,12 +705,15 @@ class Kirby:
         self.flying = False
         self.frame = 0
         self.action = 5
+        self.x_move = 0
         self.y_move = 0
         self.face_dir = True
         self.jumpCount = 4
         self.player_number = 0
         self.inhale = None
         self.eating_time = 0
+        self.damage = 0.0
+        self.life = 3
         self.left, self.bottom, self.right, self.top = self.get_bb()
         self.image = load_image('texture/kirby.png')
         self.state_machine = StateMachine(self)
@@ -614,5 +743,5 @@ class Kirby:
         return self.x - 25, self.y - 50, self.x + 25, self.y
 
     def handle_collision(self, group, other):
-        if group == 'kirby:ground':
-            pass
+        if group == 'kirby:deadline':
+            self.state_machine.handle_event(('RESPAWN', 0))
