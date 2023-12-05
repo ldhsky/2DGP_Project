@@ -89,6 +89,7 @@ def skill2_up(e):
     elif server.sonic.player_number == 2:
         return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_j
 
+
 def knockback(e):
     return e[0] == 'KNOCKBACK' and e[1] == 0
 
@@ -128,6 +129,7 @@ class Respwan:
         sonic.x = 800
         sonic.y = 900
         sonic.life -= 1
+        sonic.damage= 0
 
     @staticmethod
     def exit(sonic, e):
@@ -143,6 +145,7 @@ class Respwan:
             sonic.image.clip_draw(int(sonic.frame) * 100, 0, 100, 100, sonic.x, sonic.y)
         elif sonic.dir == -1:
             sonic.image.clip_composite_draw(int(sonic.frame) * 100, 0, 100, 100, 0, 'h', sonic.x, sonic.y, 100, 100)
+
 
 class Idle:
     @staticmethod
@@ -544,7 +547,7 @@ class Sonic:
         draw_rectangle(*self.get_bb())
 
     def get_bb(self):
-        return self.x - 25, self.y - 50, self.x + 25, self.y
+        return self.x - 25, self.y - 50, self.x + 25, self.y + 50
 
     def handle_collision(self, group, other):
         if group == 'kirby_inhale:sonic':
@@ -557,6 +560,9 @@ class Sonic:
                 server.inhaled_time1 = 0
             elif self.player_number == 2:
                 server.inhaled_time2 = 0
+
+        if group == 'kirby_fire:sonic' or group == 'kirby_sword:sonic':
+            self.state_machine.handle_event(('KNOCKBACK', 0))
 
         if self.player_number == 1 and server.inhaled_time1 >= 0.5 or self.player_number == 2 and server.inhaled_time2 >= 0.5:
             self.state_machine.handle_event(('INHALED', 0))

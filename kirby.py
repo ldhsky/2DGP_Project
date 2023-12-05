@@ -3,7 +3,9 @@ from pico2d import *
 import game_framework
 import game_world
 import server
+from kirby_skill.kirby_fire import KirbyFire
 from kirby_skill.kirby_inhale import KirbyInhale
+from kirby_skill.kirby_sword import KirbySword
 
 
 def right_down(e):
@@ -134,6 +136,14 @@ def respawn(e):
     return e[0] == 'RESPAWN' and e[1] == 0
 
 
+def end_fire(e):
+    return e[0] == 'END_FIRE' and e[1] == 0
+
+
+def end_sword(e):
+    return e[0] == 'END_SWORD' and e[1] == 0
+
+
 # Boy Run Speed
 PIXEL_PER_METER = (10.0 / 0.1)  # 10 pixel 30 cm
 RUN_SPEED_KMPH = 10.0  # Km / Hour
@@ -180,6 +190,7 @@ class Respwan:
         kirby.x = 800
         kirby.y = 900
         kirby.life -= 1
+        kirby.damage = 0
 
     @staticmethod
     def exit(kirby, e):
@@ -489,6 +500,121 @@ class Inhale:
             kirby.image.clip_composite_draw(int(kirby.frame) * 100, 0, 100, 100, 0, 'h', kirby.x, kirby.y, 100, 100)
 
 
+class Fire:
+    @staticmethod
+    def enter(kirby, e):
+        kirby.image = load_image("texture/kirby.png")
+        kirby.fire = KirbyFire(kirby.x, kirby.y)
+        game_world.add_object(kirby.fire)
+        game_world.add_collision_pair('kirby_fire:sonic', kirby.fire, None)
+        kirby.fire_time = get_time()
+
+    @staticmethod
+    def exit(kirby, e):
+        game_world.remove_object(kirby.fire)
+        kirby.fire = None
+
+    @staticmethod
+    def do(kirby):
+        if get_time() - kirby.fire_time >= 1.0:
+            kirby.state_machine.handle_event(('END_FIRE', 0))
+        kirby.y_move = 0
+        kirby.x += RUN_SPEED_PPS * game_framework.frame_time * 1.5 * kirby.dir
+
+    @staticmethod
+    def draw(kirby):
+        pass
+
+
+class Sword:
+    @staticmethod
+    def enter(kirby, e):
+        kirby.image = load_image("texture/kirby.png")
+        if skill1_down(e):
+            kirby.sword = KirbySword(kirby.x, kirby.y)
+            game_world.add_object(kirby.sword)
+            game_world.add_collision_pair('kirby_sword:sonic', kirby.sword, None)
+            kirby.sword_time = get_time()
+
+    @staticmethod
+    def exit(kirby, e):
+        if not left_down(e) and not right_down(e):
+            game_world.remove_object(kirby.sword)
+
+    @staticmethod
+    def do(kirby):
+        if get_time() - kirby.sword_time >= 1.0:
+            kirby.state_machine.handle_event(('END_SWORD', 0))
+        if not kirby.flying:
+            kirby.y_move = 0
+        kirby.y_move -= server.gravity / 4 * game_framework.frame_time
+        kirby.y += kirby.y_move * game_framework.frame_time
+
+    @staticmethod
+    def draw(kirby):
+        pass
+
+
+class SwordLeft:
+    @staticmethod
+    def enter(kirby, e):
+        kirby.image = load_image("texture/kirby.png")
+        if skill1_down(e):
+            kirby.sword = KirbySword(kirby.x, kirby.y)
+            game_world.add_object(kirby.sword)
+            game_world.add_collision_pair('kirby_sword:sonic', kirby.sword, None)
+            kirby.sword_time = get_time()
+
+    @staticmethod
+    def exit(kirby, e):
+        if not left_up(e) and not right_down(e):
+            game_world.remove_object(kirby.sword)
+
+    @staticmethod
+    def do(kirby):
+        if get_time() - kirby.sword_time >= 1.0:
+            kirby.state_machine.handle_event(('END_SWORD', 0))
+        if not kirby.flying:
+            kirby.y_move = 0
+        kirby.y_move -= server.gravity / 4 * game_framework.frame_time
+        kirby.y += kirby.y_move * game_framework.frame_time
+        kirby.x -= RUN_SPEED_PPS * game_framework.frame_time
+
+    @staticmethod
+    def draw(kirby):
+        pass
+
+
+class SwordRight:
+    @staticmethod
+    def enter(kirby, e):
+        kirby.image = load_image("texture/kirby.png")
+        if skill1_down(e):
+            kirby.sword = KirbySword(kirby.x, kirby.y)
+            game_world.add_object(kirby.sword)
+            game_world.add_collision_pair('kirby_sword:sonic', kirby.sword, None)
+            kirby.sword_time = get_time()
+
+    @staticmethod
+    def exit(kirby, e):
+        if not right_up(e) and not left_down(e):
+            game_world.remove_object(kirby.sword)
+
+    @staticmethod
+    def do(kirby):
+        if get_time() - kirby.sword_time >= 1.0:
+            kirby.state_machine.handle_event(('END_SWORD', 0))
+        if not kirby.flying:
+            kirby.y_move = 0
+        kirby.y_move -= server.gravity / 4 * game_framework.frame_time
+        kirby.y += kirby.y_move * game_framework.frame_time
+        kirby.x += RUN_SPEED_PPS * game_framework.frame_time
+
+    @staticmethod
+    def draw(kirby):
+        pass
+
+
 class Eat:
     @staticmethod
     def enter(kirby, e):
@@ -645,24 +771,30 @@ class StateMachine:
         self.transitions = {
             Idle: {right_down: RunRight, left_down: RunLeft, space_down: Jump,
                    skill1_down: Inhale, respawn: Respwan},
-            RunLeft: {right_down: RunRight, left_up: Idle, space_down: JumpLeft, respawn: Respwan},
-            RunRight: {left_down: RunLeft, right_up: Idle, space_down: JumpRight, respawn: Respwan},
+            RunLeft: {right_down: RunRight, left_up: Idle, space_down: JumpLeft, respawn: Respwan, skill1_down: Fire},
+            RunRight: {left_down: RunLeft, right_up: Idle, space_down: JumpRight, respawn: Respwan, skill1_down: Fire},
             Jump: {right_down: JumpRight, left_down: JumpLeft, left_up: JumpRight, right_up: JumpLeft,
-                   on_the_ground: Idle, space_down: DoubleJump, respawn: Respwan},
-            JumpLeft: {right_down: JumpRight, left_up: Jump, on_the_ground: RunLeft, space_down: DoubleJumpLeft, respawn: Respwan},
-            JumpRight: {left_down: JumpLeft, right_up: Jump, on_the_ground: RunRight, space_down: DoubleJumpRight, respawn: Respwan},
+                   on_the_ground: Idle, space_down: DoubleJump, respawn: Respwan, skill1_down: Sword},
+            JumpLeft: {right_down: JumpRight, left_up: Jump, on_the_ground: RunLeft, space_down: DoubleJumpLeft, respawn: Respwan,
+                       skill1_down: SwordLeft},
+            JumpRight: {left_down: JumpLeft, right_up: Jump, on_the_ground: RunRight, space_down: DoubleJumpRight, respawn: Respwan
+                        , skill1_down: SwordRight},
             DoubleJump: {on_the_ground: Idle, space_down: DoubleJump, left_down: DoubleJumpLeft,
-                         right_down: DoubleJumpRight, respawn: Respwan},
+                         right_down: DoubleJumpRight, respawn: Respwan, skill1_down: Sword},
             DoubleJumpLeft: {on_the_ground: RunLeft, space_down: DoubleJumpLeft, left_up: DoubleJump,
-                             right_down: DoubleJumpRight, respawn: Respwan},
+                             right_down: DoubleJumpRight, respawn: Respwan, skill1_down: SwordLeft},
             DoubleJumpRight: {on_the_ground: RunRight, space_down: DoubleJumpRight, right_up: DoubleJump,
-                              left_down: DoubleJumpLeft, respawn: Respwan},
+                              left_down: DoubleJumpLeft, respawn: Respwan, skill1_down: SwordRight},
             Inhale: {skill1_up: Idle, eat: Eat, respawn: Respwan},
             Eat: {end_inhale: EndInhale, left_down: EatLeft, right_down: EatRight, bottom_down: EndInhale, respawn: Respwan},
             EatLeft: {end_inhale: EndInhale, left_up: Eat, right_down: EatRight, bottom_down: EndInhale, respawn: Respwan},
             EatRight: {end_inhale: EndInhale, right_up: Eat, left_up: EatLeft, bottom_down: EndInhale, respawn: Respwan},
             EndInhale: {end_eat: Idle, respawn: Respwan},
-            Respwan: {space_down: Idle}
+            Respwan: {space_down: Idle},
+            Fire: {end_fire: Idle, respawn: Respwan},
+            Sword: {end_sword: Idle, space_down: DoubleJump, respawn: Respwan, left_down: SwordLeft, right_down: SwordRight},
+            SwordLeft: {end_sword: RunLeft, right_down: SwordRight, left_up: Sword, respawn: Respwan},
+            SwordRight: {end_sword: RunRight, left_down: SwordLeft, right_up: Sword, respawn: Respwan}
         }
 
     def start(self):
@@ -675,7 +807,9 @@ class StateMachine:
             self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 10
         elif self.cur_state == DoubleJump or self.cur_state == DoubleJumpLeft or self.cur_state == DoubleJumpRight:
             self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 6
-        elif self.cur_state == Eat or self.cur_state == Respwan:
+        elif self.cur_state == Eat or self.cur_state == EatLeft or self.cur_state == EatRight:
+            self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 16
+        elif self.cur_state == Respwan:
             self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 20
         elif self.cur_state == EndInhale:
             self.kirby.frame = (self.kirby.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 9
@@ -714,6 +848,10 @@ class Kirby:
         self.eating_time = 0
         self.damage = 0.0
         self.life = 3
+        self.fire = None
+        self.fire_time = 0
+        self.sword = None
+        self.sword_time = 0
         self.left, self.bottom, self.right, self.top = self.get_bb()
         self.image = load_image('texture/kirby.png')
         self.state_machine = StateMachine(self)

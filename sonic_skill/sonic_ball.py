@@ -3,9 +3,9 @@ from pico2d import *
 import server
 
 
-class KirbyFire:
+class SoincBall:
     def __init__(self, _x, _y):
-        self.image = load_image('texture/kirby_fire.png')
+        self.image = load_image('texture/kirby_ball.png')
         self.x = _x
         self.y = _y
 

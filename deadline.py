@@ -18,7 +18,7 @@ class Deadline:
         pass
 
     def get_bb(self):
-        return self.x - 1000, self.y - 700, self.x + 1000, self.y + 700
+        return self.x - 1000, self.y - 900, self.x + 1000, self.y + 900
 
     def handle_collision(self, group, other):
         pass

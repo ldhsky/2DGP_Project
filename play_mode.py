@@ -35,13 +35,15 @@ def init():
     game_world.add_collision_pair('sonic:ground', server.player2, None)
     game_world.add_collision_pair('kirby_inhale:sonic', None, server.player2)
     game_world.add_collision_pair('sonic:deadline', server.player2, None)
+    game_world.add_collision_pair('kirby_fire:sonic', None, server.player2)
+    game_world.add_collision_pair('kirby_sword:sonic', None, server.player2)
 
     server.kirby = Kirby(400, 400)
     server.kirby.player_number = 1
     server.sonic = Sonic(1400, 400)
     server.sonic.player_number = 2
 
-    server.deadlines = [Deadline(-1100, 500), Deadline(800, -800), Deadline(2700, 500), Deadline(800, 1800)]
+    server.deadlines = [Deadline(-1500, 500), Deadline(800, -1200), Deadline(3100, 500), Deadline(800, 2200)]
     for o in server.deadlines:
         game_world.add_object(o, 1)
         game_world.add_collision_pair('kirby:deadline', None, o)
