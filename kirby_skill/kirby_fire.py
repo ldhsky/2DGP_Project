@@ -14,7 +14,7 @@ class KirbyFire:
             self.image.clip_draw(int(server.player1.frame) * 100, 0, 100, 100, self.x, self.y)
         elif server.player1.dir == -1:
             self.image.clip_composite_draw(int(server.player1.frame) * 100, 0, 100, 100, 0, 'h', self.x, self.y, 100, 100)
-        draw_rectangle(*self.get_bb())
+        # draw_rectangle(*self.get_bb())
 
     def update(self):
         self.x = server.player1.x

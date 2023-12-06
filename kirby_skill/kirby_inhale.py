@@ -13,7 +13,8 @@ class KirbyInhale:
 
     def draw(self):
         # self.image.clip_draw_to_origin(0, 0, self.w, self.h, self.x, self.y)
-        draw_rectangle(*self.get_bb())
+        # draw_rectangle(*self.get_bb())
+        pass
 
     def update(self):
         #self.window_left = clamp(0, int(server.boy.x) - self.cw // 2, self.w - self.cw - 1)
